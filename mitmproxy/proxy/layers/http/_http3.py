@@ -27,6 +27,7 @@ from ._http2 import parse_h2_request_headers
 from ._http2 import parse_h2_response_headers
 from ._http_h3 import LayeredH3Connection
 from ._http_h3 import StreamReset
+from ._http_h3 import StreamClose
 from ._http_h3 import TrailersReceived
 from mitmproxy import connection
 from mitmproxy import http
@@ -42,7 +43,7 @@ from mitmproxy.proxy.layers.quic import QuicStreamEvent
 from mitmproxy.proxy.layers.quic import StopQuicStream
 from mitmproxy.proxy.utils import expect
 
-
+import logging
 class Http3Connection(HttpConnection):
     h3_conn: LayeredH3Connection
 
@@ -125,6 +126,7 @@ class Http3Connection(HttpConnection):
             if event.stream_id in self._stream_protocol_errors:
                 # we already reset or ended the stream, tell the peer to stop
                 # (this is a noop if the peer already did the same)
+                logging.info(f"stream proto error {event.stream_id=}")
                 yield StopQuicStream(
                     self.conn,
                     event.stream_id,
@@ -133,6 +135,7 @@ class Http3Connection(HttpConnection):
             else:
                 for h3_event in h3_events:
                     if isinstance(h3_event, StreamReset):
+                        logging.info(f"stream reset by client {event.stream_id=}")
                         if h3_event.push_id is None:
                             err_str = error_code_to_str(h3_event.error_code)
                             err_code = {
@@ -145,6 +148,12 @@ class Http3Connection(HttpConnection):
                                     code=err_code,
                                 )
                             )
+                    elif isinstance(h3_event, StreamClose):
+                        yield StopQuicStream(
+                            event.connection,
+                            event.stream_id,
+                            h3_event.error_code
+                        )
                     elif isinstance(h3_event, DataReceived):
                         if h3_event.push_id is None:
                             if h3_event.data:

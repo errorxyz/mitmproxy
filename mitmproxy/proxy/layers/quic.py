@@ -148,6 +148,13 @@ class QuicStreamReset(QuicStreamEvent):
     error_code: int
     """The error code that triggered the reset."""
 
+@dataclass
+class QuicStreamClose(QuicStreamEvent):
+    """Event that is fired when the remote peer resets a stream."""
+
+    error_code: int
+    """The error code that triggered the reset."""
+
 
 class QuicStreamCommand(commands.ConnectionCommand):
     """Base class for all QUIC stream commands."""
@@ -814,7 +821,7 @@ class RawQuicLayer(layer.Layer):
     def done(self, _) -> layer.CommandGenerator[None]:  # pragma: no cover
         yield from ()
 
-
+import logging
 class QuicLayer(tunnel.TunnelLayer):
     quic: QuicConnection | None = None
     tls: QuicTlsSettings | None = None
@@ -861,14 +868,19 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
+                logging.info(f"sending to stream {command.stream_id} in {self.__class__} {self.context.layers=} \n {self.quic._streams=}")
                 self.quic.send_stream_data(
                     command.stream_id, command.data, command.end_stream
                 )
+                logging.info("sent")
             elif isinstance(command, ResetQuicStream):
+                logging.info(f"command: reset stream {command.stream_id}\n{self.__class__}\n{self.quic._streams}")
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
                 # the stream might have already been closed, check before stopping
+                logging.info(f"Trying to stop stream: {command.stream_id=} {self.__class__}")
                 if command.stream_id in self.quic._streams:
+                    logging.info(f"stopped stream")
                     self.quic.stop_stream(command.stream_id, command.error_code)
             else:
                 raise AssertionError(f"Unexpected stream command: {command!r}")
@@ -1046,9 +1058,14 @@ class QuicLayer(tunnel.TunnelLayer):
                     )
                 )
             elif isinstance(event, quic_events.StreamReset):
+                logging.info(f"got StreamReset event {self.__class__}")
                 yield from self.event_to_child(
                     QuicStreamReset(self.conn, event.stream_id, event.error_code)
                 )
+            elif isinstance(event, quic_events.StopSendingReceived):
+                logging.info(f"got StopSendingRcvd event for {event.stream_id=} {self.__class__} {self.quic._is_client=} {self.context.layers=}")
+                yield from self.event_to_child(QuicStreamClose(self.conn, event.stream_id, event.error_code))
+                yield from self.event_to_child(QuicStreamClose(self.context.layers[-3].conn, event.stream_id, event.error_code))
             elif isinstance(
                 event,
                 (
@@ -1063,6 +1080,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 raise AssertionError(f"Unexpected event: {event!r}")
 
         # transmit buffered data and re-arm timer
+        logging.info("addressed all events")
         yield from self.tls_interact()
 
     def receive_close(self) -> layer.CommandGenerator[None]:

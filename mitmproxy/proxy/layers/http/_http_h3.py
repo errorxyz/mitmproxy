@@ -21,6 +21,7 @@ from mitmproxy.proxy.layers.quic import QuicConnectionClosed
 from mitmproxy.proxy.layers.quic import QuicStreamDataReceived
 from mitmproxy.proxy.layers.quic import QuicStreamEvent
 from mitmproxy.proxy.layers.quic import QuicStreamReset
+from mitmproxy.proxy.layers.quic import QuicStreamClose
 from mitmproxy.proxy.layers.quic import ResetQuicStream
 from mitmproxy.proxy.layers.quic import SendQuicStreamData
 
@@ -46,6 +47,21 @@ class TrailersReceived(H3Event):
 
 @dataclass
 class StreamReset(H3Event):
+    """
+    The StreamReset event is fired whenever a stream is reset by the peer.
+    """
+
+    stream_id: int
+    "The ID of the stream that was reset."
+
+    error_code: int
+    """The error code indicating why the stream was reset."""
+
+    push_id: int | None = None
+    "The Push ID or `None` if this is not a push."
+
+@dataclass
+class StreamClose(H3Event):
     """
     The StreamReset event is fired whenever a stream is reset by the peer.
     """
@@ -222,6 +238,11 @@ class LayeredH3Connection(H3Connection):
                 return self.handle_event(
                     StreamDataReceived(event.data, event.end_stream, event.stream_id)
                 )
+
+        elif isinstance(event, QuicStreamClose):
+            stream = self._get_or_create_stream(event.stream_id)
+            stream.ended = True
+            return [StreamClose(event.stream_id, event.error_code, stream.push_id)]
 
         # should never happen
         else:  # pragma: no cover
