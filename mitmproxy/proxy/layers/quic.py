@@ -818,6 +818,8 @@ class RawQuicLayer(layer.Layer):
 class QuicLayer(tunnel.TunnelLayer):
     quic: QuicConnection | None = None
     tls: QuicTlsSettings | None = None
+    stop_sending_streams: list[int] = []
+    """Streams to stop sending data to. Streams that raise StopSendingReceived events are added here"""
 
     def __init__(
         self,
@@ -861,9 +863,10 @@ class QuicLayer(tunnel.TunnelLayer):
         if isinstance(command, QuicStreamCommand) and command.connection is self.conn:
             assert self.quic
             if isinstance(command, SendQuicStreamData):
-                self.quic.send_stream_data(
-                    command.stream_id, command.data, command.end_stream
-                )
+                if command.stream_id not in self.stop_sending_streams:
+                    self.quic.send_stream_data(
+                        command.stream_id, command.data, command.end_stream
+                    )
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
             elif isinstance(command, StopQuicStream):
@@ -1049,6 +1052,8 @@ class QuicLayer(tunnel.TunnelLayer):
                 yield from self.event_to_child(
                     QuicStreamReset(self.conn, event.stream_id, event.error_code)
                 )
+            elif isinstance(event, quic_events.StopSendingReceived):
+                self.stop_sending_streams.append(event.stream_id)
             elif isinstance(
                 event,
                 (
