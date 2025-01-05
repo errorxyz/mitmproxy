@@ -77,6 +77,16 @@ class ConsoleMaster(master.Master):
             callback=self.quit,
         )
 
+    def prompt_for_user_choice(self, prompt, callback) -> None:
+        signals.status_prompt_onekey.send(
+            prompt=prompt,
+            keys=[
+                ("yes", "y"),
+                ("no", "n"),
+            ],
+            callback=callback,
+        )
+
     def sig_add_log(self, entry: log.LogEntry):
         if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(
             entry.level
