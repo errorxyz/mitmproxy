@@ -11,6 +11,7 @@
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
+- Prompt user before running shortcuts mapped to destructive commands
 
 ## 05 December 2024: mitmproxy 11.0.2
 
@@ -66,7 +67,7 @@
   ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
 - Fix slow tnetstring parsing in case of very large tnetstring.
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
-- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to
   determine the operating system's name servers.
   ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
 - Improve the error message when users specify the `certs` option without a matching private key.
