@@ -86,11 +86,14 @@ class Keymap:
         signals.keybindings_change.send()
         self.binding_for_help.cache_clear()
 
-    def add(self, key: str, command: str, contexts: Sequence[str], help="") -> None:
+    def add(self, key: str, command: str, contexts: Sequence[str], help="", prompt: bool = False) -> None:
         """
         Add a key to the key map.
         """
         self._check_contexts(contexts)
+
+        if prompt:
+            command = f"console.command.confirm \"{help}\" {command.strip()}"
 
         for b in self.bindings:
             if b.key == key and b.command.strip() == command.strip():

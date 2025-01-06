@@ -69,6 +69,13 @@ def map(km: Keymap) -> None:
         "view.flows.remove @focus",
         ["flowlist", "flowview"],
         "Delete flow from view",
+        True
+    )
+    km.add(
+        "ctrl d",
+        "view.flows.remove @focus",
+        ["flowlist", "flowview"],
+        "Delete flow from view (no prompt)",
     )
     km.add(
         "D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow"
@@ -125,7 +132,7 @@ def map(km: Keymap) -> None:
     km.add(
         "v", "set view_order_reversed toggle", ["flowlist"], "Reverse flow list order"
     )
-    km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks")
+    km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks", True)
     km.add(
         "w",
         "console.command save.file @shown ",
@@ -137,11 +144,13 @@ def map(km: Keymap) -> None:
         "flow.revert @focus",
         ["flowlist", "flowview"],
         "Revert changes to this flow",
+        True
     )
-    km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow")
-    km.add("z", "view.flows.remove @all", ["flowlist"], "Clear flow list")
+    # ??
+    km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow", True)
+    km.add("z", "view.flows.remove @all", ["flowlist"], "Clear flow list", True)
     km.add(
-        "Z", "view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing"
+        "Z", "view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing", True
     )
     km.add(
         "|",
@@ -200,13 +209,13 @@ def map(km: Keymap) -> None:
     km.add("L", "console.command options.load ", ["options"], "Load from file")
     km.add("S", "console.command options.save ", ["options"], "Save to file")
     km.add("D", "options.reset", ["options"], "Reset all options")
-    km.add("d", "console.options.reset.focus", ["options"], "Reset this option")
+    km.add("d", "console.options.reset.focus", ["options"], "Reset this option", True)
 
     km.add("a", "console.grideditor.add", ["grideditor"], "Add a row after cursor")
     km.add(
         "A", "console.grideditor.insert", ["grideditor"], "Insert a row before cursor"
     )
-    km.add("d", "console.grideditor.delete", ["grideditor"], "Delete this row")
+    km.add("d", "console.grideditor.delete", ["grideditor"], "Delete this row", True)
     km.add(
         "r",
         "console.command console.grideditor.load",
@@ -227,7 +236,7 @@ def map(km: Keymap) -> None:
         "Save data to file as CSV",
     )
 
-    km.add("z", "eventstore.clear", ["eventlog"], "Clear")
+    km.add("z", "eventstore.clear", ["eventlog"], "Clear", True)
 
     km.add(
         "a",
@@ -243,6 +252,7 @@ def map(km: Keymap) -> None:
         "console.key.unbind.focus",
         ["keybindings"],
         "Unbind the currently focused key binding",
+        True
     )
     km.add(
         "x",

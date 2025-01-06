@@ -11,7 +11,7 @@
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
-- Prompt user before running shortcuts mapped to destructive commands
+- Prompt user before executing shortcuts mapped to destructive commands
 
 ## 05 December 2024: mitmproxy 11.0.2
 
